@@ -1,0 +1,176 @@
+<html>
+    <head>
+        <title>Mr & Ms Risci Pageant Scoresheet: Contestant {{contestantnum}} </title>
+        <script src="{{url_for('static' ,filename='lib/jquery-3.4.1.js')}}"> </script>
+        
+            {% set genders = ["M","F"]%}
+            {% set criteriaList = ["Creativeness","Stage Presence/Stance","Appropriateness"]%}
+            {% set criteriaShortHand = ["creativeness","stagepresence","appropriateness"]%}
+        <script>
+            var buttonList = [];
+            var currentInput;
+            var criteriaFull = {{criteriaList}};
+            var criteria = {{criteriaShortHand}};
+            var scores = {};
+            var indexButton = 0;
+            for(let x in {{genders}}){
+                for(let y in criteria){
+                    buttonList.push({{genders}}[x]+parseInt(++y)+"B")
+                }
+            }
+            if(!{{previousScores}}){
+                for(let x in {{genders}}){
+                    scores[x]={};
+                }
+                for(let x in {{genders}}){
+                    for(let y in criteria){
+                        scores[x][criteria[y]]=-1;
+                    }
+                }
+            }
+            else {scores = {{previousScores}}}
+            // TODO: CHAR LIMIT ON SCOREINPUT
+            $(window).on("load",function(){
+                updateScorePlaceholder();
+                
+                $("#score-input").on("keydown",function (event){
+                    if(event.which === 13){
+                        $('#score-submit').click();
+                        return false;  
+                    }
+                    if(event.which === 32){
+                        event.preventDefault();
+                        return false;  
+                    }
+                });
+                $("#modal-element").on('keydown', function(e) {
+                    if(e.which == 40) {
+                        e.preventDefault();
+                        $("#score-input").val("");
+                        if(++indexButton==buttonList.length) indexButton = 0;
+                        $("#"+buttonList[indexButton]).click();
+                    }
+                    if(e.which == 38){
+                        e.preventDefault();
+                        $("#score-input").val("");
+                        if(--indexButton==-1) indexButton = buttonList.length-1;
+                        $("#"+buttonList[indexButton]).click();
+                    }
+                    if(e.which == 27){
+                        e.preventDefault();
+                        closeModal();
+                    }
+                });   
+            });
+            function toggleModal(buttonID){
+                currentInput = buttonID.slice(0,-1);
+                indexButton = buttonList.indexOf(buttonID);
+                $("#modal-element").slideDown("slow");
+               
+                $("#score-input").focus();
+                currentGender = (buttonID.slice(0,1)==="M")? "Male":"Female";
+                $("#score-criteria").text(currentGender+": "+$("#"+currentInput+"C").text());
+            }
+            function closeModal(){
+                $("#modal-element").slideUp("slow");
+                $("#score-input").val('');
+                $("#score-error").text(" ");
+            }
+            $(window).click(function(event) {
+                if (event.target.id == "modal-element") {
+                    closeModal();
+                }
+            });
+            function changeScore(){
+                let indexX = {{genders}}.indexOf(currentInput.slice(0,-1));
+                let indexY = criteria[parseInt(currentInput.slice(1,2))-1];
+                let input = $("#score-input").val();
+                if(isNaN(input)){
+                    $("#score-error").text("Input is not a Number!");
+                    $("#score-input").val('');
+                    return false;
+                }
+                if(parseInt(input)>30){
+                    $("#score-error").text("Input is not less than or equal to 30!");
+                    $("#score-input").val('');
+                    return false;
+                }
+                if(parseInt(input)<0){
+                    $("#score-error").text("Input is a negative number!");
+                    $("#score-input").val('');
+                    return false;
+                }
+                if(input===""){
+                    $("#score-input").val('');
+                    input=-1;
+                    
+                }
+                $("#score-error").text(" ");
+                scores[indexX][indexY]=parseInt(input);
+                closeModal();
+                updateScorePlaceholder();
+            }
+            function updateScorePlaceholder(){
+                for(let index in scores){
+                    let inputID={{genders}}[index];
+                    for(let y in scores[index]){
+                        if(scores[index][y]!=-1){
+                        $("#"+inputID+(criteria.indexOf(y)+1).toString()).text(scores[index][y]);
+                        $("#"+inputID+(criteria.indexOf(y)+1).toString()+"I").text("")
+                        }
+                        else{
+                            $("#"+inputID+(criteria.indexOf(y)+1).toString()+"I").text("(*)")
+                        }
+                    }
+                }
+            }
+        
+        </script>
+        <link rel="stylesheet" type="text/css" href="{{url_for('static' ,filename='styles/cpage.css')}}">
+
+
+    </head>
+    {% include "contestant-navbar.j2" %}
+    <div id="contestant-page">
+        <h1 class="contestant-number"> Contestant # {{contestantnum}}</h1>
+        {%for gender in genders%}
+        <div class="outer"> 
+            <div class="innerL">
+                <img class="cts" src="{{url_for('static',filename='images/'+contestantnum+'/1'+gender+'.png')}}">
+            </div>
+            <div class="innerR">
+                <div class="scoreWord">
+                    SCORE
+                </div>
+                <br>
+            {% for criteria in criteriaList%}
+                <div class="criteria_score">
+                    <span style="font-family: 'Visby';text-align:right;margin-top:3.5%;font-size: 150%;font-weight:bold;color:red;width:10%;overflow:hidden" id="{{gender + loop.index|string+'I'}}">(*)</span>
+                    <div class="criteria" id="{{gender + loop.index|string +'C'}}">
+                        {{criteria}}
+                    </div>
+                    <div class="score">
+                        <span class="score-placeholder" id="{{gender + loop.index|string}}"></span>
+                        <span class="score-max">/30</span>
+                        <button id="{{gender + loop.index|string +'B'}}" onClick="toggleModal(this.id)">
+                            Change 
+                        </button>
+                    </div>
+                </div>
+            {%endfor%}
+            </div>
+        </div>
+        {%endfor%}
+        <div id="modal-element" class="modal-background">
+            <div id="modal-content" class="modal-content">
+            <button class="modal-close" onClick="closeModal()">X</button>
+            <span>Change Score:</span><br>
+            <span id="score-criteria"> </span><br>
+            <input id="score-input"/>
+            <span id="score-error" class="modal-error"></span>
+            <button id="score-submit" onClick="changeScore()" class="score-submit">Submit</button>
+            </div>
+        </div>
+    </div>
+
+</html>

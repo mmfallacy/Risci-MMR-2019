@@ -1,0 +1,40 @@
+<html>
+    <head>
+        <style>
+            .contestant-selector{
+                display:flex;
+                justify-content: space-evenly;
+                width:96%;
+                overflow-x:auto;
+            }
+            .contestant-selector > a{
+                font-size:  2vw;
+                border:1px solid blue;
+                text-decoration: none;
+                width:3%;
+                padding:.5%;
+                text-align: center;
+            }
+            .contestant-navbar{
+                align-items: center;
+                padding:1%;
+                background-color:red;
+                height:4vh;
+                justify-content: space-between;
+                display:flex;
+            }
+            
+        </style>
+    </head>
+    <body>
+        {% include "navbar.j2" %}
+        <div class="contestant-navbar">
+                <div class="contestant-selector">
+                    {% for contestant in range(0,contestantNum) %}
+                    <a href="/{{theme}}/{{loop.index}}">{{loop.index}}</a>
+                    {% endfor %}
+                </div>
+        </div>
+    </body>
+
+</html>

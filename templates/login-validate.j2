@@ -1,0 +1,20 @@
+<html>
+<head>
+    <script>
+        function openPopup(e){
+            document.getElementById("modal").disabled = true;
+            let params = "location=no,menubar=no,statusbar=no,fullscreen,titlebar=no,toolbar=no,resizable=no,height="+(screen.height-108)+",width="+screen.width+""
+            //var popup = window.open("http://{{request.host}}/","_blank",params);
+            document.documentElement.webkitRequestFullScreen();
+            window.open("http://{{request.host}}/","_self");
+            
+            //popup.document.body.onbeforeunload = function () {
+            //    document.getElementById("modal").disabled = false; }; 
+            
+        }
+    </script>
+</head>
+<h1> LOGIN SUCCESS :{{username}}</h1>
+<br>
+<button id="modal" onClick='openPopup(event)'>
+Click Here to Redirect </button>
