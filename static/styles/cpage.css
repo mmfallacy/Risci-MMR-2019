@@ -121,8 +121,11 @@ body{
 }
 .modal-content>input{
     margin:auto;
-    height:10%;
-    width:50%;
+    width:20%;
+    padding:3% 1%;
+    font-family: Visby;
+    font-size:200%;
+    text-align:center;
 }
 .modal-content>.score-submit{
     margin:auto;

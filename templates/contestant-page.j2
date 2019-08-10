@@ -18,23 +18,23 @@
                     buttonList.push({{genders}}[x]+parseInt(++y)+"B")
                 }
             }
-            if(!{{previousScores}}){
+            if(!("contestant-{{contestantnum}}"in sessionStorage)){
                 for(let x in {{genders}}){
-                    scores[x]={};
+                    scores[{{genders}}[x]]={};
                 }
                 for(let x in {{genders}}){
                     for(let y in criteria){
-                        scores[x][criteria[y]]=-1;
+                        scores[{{genders}}[x]][criteria[y]]=-1;
                     }
                 }
             }
-            else {scores = {{previousScores}}}
-            // TODO: CHAR LIMIT ON SCOREINPUT
+            else {scores = JSON.parse(sessionStorage.getItem("contestant-{{contestantnum}}"))}
             // FIXME: ESC ON NAVBAR
             $(window).on("load",function(){
                 updateScorePlaceholder();
-                
-                $("#score-input").on("keydown",function (event){
+                $("#score-input").on("keyup",function (event){
+                    
+                    validateScore();
                     if(event.which === 13){
                         $('#score-submit').click();
                         return false;  
@@ -61,8 +61,12 @@
                         e.preventDefault();
                         closeModal();
                     }
-                });   
+                });  
             });
+            $(window).on("beforeunload",function(){
+                console.log(scores)
+                sessionStorage.setItem("contestant-{{contestantnum}}",JSON.stringify(scores));
+                }); 
             function toggleModal(buttonID){
                 currentInput = buttonID.slice(0,-1);
                 indexButton = buttonList.indexOf(buttonID);
@@ -82,45 +86,63 @@
                     closeModal();
                 }
             });
-            function changeScore(){
-                let indexX = {{genders}}.indexOf(currentInput.slice(0,-1));
-                let indexY = criteria[parseInt(currentInput.slice(1,2))-1];
+            function validateScore(){
                 let input = $("#score-input").val();
-                if(isNaN(input)){
+                if(isNaN(input)&&input!="-"){
                     $("#score-error").text("Input is not a Number!");
                     $("#score-input").val('');
                     return false;
                 }
-                if(parseInt(input)>30){
-                    $("#score-error").text("Input is not less than or equal to 30!");
-                    $("#score-input").val('');
+                else if(parseInt(input)>30){
+                    $("#score-error").text("Max score input is 30!");
+                    $("#score-input").val(30);
                     return false;
                 }
-                if(parseInt(input)<0){
+                else if(parseInt(input)<0){
                     $("#score-error").text("Input is a negative number!");
-                    $("#score-input").val('');
+                    $("#score-input").val(0);
                     return false;
                 }
-                if(input===""){
+                else if(input===""){
                     $("#score-input").val('');
                     input=-1;
-                    
                 }
-                $("#score-error").text(" ");
+                else {
+                    return input;
+                }
+            }
+            function resetScores(){
+                console.log("resett")
+                for(let x in {{genders}}){
+                    scores[{{genders}}[x]]={};
+                }
+                for(let x in {{genders}}){
+                    for(let y in criteria){
+                        scores[{{genders}}[x]][criteria[y]]=-1;
+                    }
+                }
+                sessionStorage.removeItem("contestant-{{contestantnum}}");
+                updateScorePlaceholder();
+            }
+            function changeScore(){
+                let indexX = currentInput.slice(0,-1);
+                let indexY = criteria[parseInt(currentInput.slice(1,2))-1];
+                let input = validateScore();
+                if(!input) {$("#score-error").text(" ");return;}
                 scores[indexX][indexY]=parseInt(input);
                 closeModal();
                 updateScorePlaceholder();
             }
             function updateScorePlaceholder(){
                 for(let index in scores){
-                    let inputID={{genders}}[index];
-                    for(let y in scores[index]){
-                        if(scores[index][y]!=-1){
-                        $("#"+inputID+(criteria.indexOf(y)+1).toString()).text(scores[index][y]);
-                        $("#"+inputID+(criteria.indexOf(y)+1).toString()+"I").text("")
+                    let genderID=index;
+                    for(let y in scores[genderID]){
+                        if(scores[genderID][y]!=-1){
+                            $("#"+genderID+(criteria.indexOf(y)+1).toString()).text(scores[genderID][y]);
+                            $("#"+genderID+(criteria.indexOf(y)+1).toString()+"I").text("")
                         }
                         else{
-                            $("#"+inputID+(criteria.indexOf(y)+1).toString()+"I").text("(*)")
+                            $("#"+genderID+(criteria.indexOf(y)+1).toString()+"I").text("(*)")
                         }
                     }
                 }
@@ -162,12 +184,13 @@
             </div>
         </div>
         {%endfor%}
+        <button onClick="resetScores()">Reset</button>
         <div id="modal-element" class="modal-background">
             <div id="modal-content" class="modal-content">
             <button class="modal-close" onClick="closeModal()">X</button>
             <span>Change Score:</span><br>
             <span id="score-criteria"> </span><br>
-            <input id="score-input"/>
+            <input onChange="validateScore()" id="score-input"/>
             <span id="score-error" class="modal-error"></span>
             <button id="score-submit" onClick="changeScore()" class="score-submit">Submit</button>
             </div>
