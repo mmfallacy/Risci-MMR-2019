@@ -33,8 +33,6 @@
             $(window).on("load",function(){
                 updateScorePlaceholder();
                 $("#score-input").on("keyup",function (event){
-                    
-                    validateScore();
                     if(event.which === 13){
                         $('#score-submit').click();
                         return false;  
@@ -43,7 +41,12 @@
                         event.preventDefault();
                         return false;  
                     }
+                
                 });
+                $("#score-input").on("input propertychange paste",function(){
+                    validateScore();
+                })
+            
                 $("#modal-element").on('keydown', function(e) {
                     if(e.which == 40) {
                         e.preventDefault();
@@ -63,6 +66,12 @@
                     }
                 });  
             });
+            $(window).on("keydown",function(e){
+                if(e.which == 9){
+                    e.preventDefault();
+                    $("#"+buttonList[indexButton]).click();
+                }
+            });
             $(window).on("beforeunload",function(){
                 console.log(scores)
                 sessionStorage.setItem("contestant-{{contestantnum}}",JSON.stringify(scores));
@@ -70,11 +79,14 @@
             function toggleModal(buttonID){
                 currentInput = buttonID.slice(0,-1);
                 indexButton = buttonList.indexOf(buttonID);
+                scoreIDX = buttonID.slice(0,1);
+                scoreIDY = criteria[parseInt(buttonID.slice(1,2))-1];
                 $("#modal-element").slideDown("slow");
                
                 $("#score-input").focus();
                 currentGender = (buttonID.slice(0,1)==="M")? "Male":"Female";
                 $("#score-criteria").text(currentGender+": "+$("#"+currentInput+"C").text());
+                if(scores[scoreIDX][scoreIDY]!=-1)$("#score-input").val(scores[scoreIDX][scoreIDY]);
             }
             function closeModal(){
                 $("#modal-element").slideUp("slow");
@@ -88,6 +100,10 @@
             });
             function validateScore(){
                 let input = $("#score-input").val();
+                if (/^0+/gi.test(input)) {
+                    $("#score-input").val('');
+                    return false;
+                }
                 if(isNaN(input)&&input!="-"){
                     $("#score-error").text("Input is not a Number!");
                     $("#score-input").val('');
@@ -106,13 +122,13 @@
                 else if(input===""){
                     $("#score-input").val('');
                     input=-1;
+                    return false;
                 }
                 else {
                     return input;
                 }
             }
             function resetScores(){
-                console.log("resett")
                 for(let x in {{genders}}){
                     scores[{{genders}}[x]]={};
                 }
@@ -142,12 +158,20 @@
                             $("#"+genderID+(criteria.indexOf(y)+1).toString()+"I").text("")
                         }
                         else{
+                            $("#"+genderID+(criteria.indexOf(y)+1).toString()).text("");
                             $("#"+genderID+(criteria.indexOf(y)+1).toString()+"I").text("(*)")
                         }
                     }
                 }
             }
-        
+        // FIXME: Remove after debugging!.
+        function checkSessionStorage(){
+            for(let i=0;i<sessionStorage.length;i++){
+                    console.log(sessionStorage.key(i));
+                    console.log(JSON.parse(sessionStorage.getItem(sessionStorage.key(i))));
+            }
+            console.log(scores);
+        }
         </script>
         <link rel="stylesheet" type="text/css" href="{{url_for('static' ,filename='styles/cpage.css')}}">
 
@@ -185,6 +209,7 @@
         </div>
         {%endfor%}
         <button onClick="resetScores()">Reset</button>
+        <button onClick="checkSessionStorage()">Log</button>
         <div id="modal-element" class="modal-background">
             <div id="modal-content" class="modal-content">
             <button class="modal-close" onClick="closeModal()">X</button>
