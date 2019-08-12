@@ -18,7 +18,7 @@
                     buttonList.push({{genders}}[x]+parseInt(++y)+"B")
                 }
             }
-            if(!("contestant-{{contestantnum}}"in sessionStorage)){
+            if(!("{{theme}}-contestant-{{contestantnum}}"in sessionStorage)){
                 for(let x in {{genders}}){
                     scores[{{genders}}[x]]={};
                 }
@@ -28,7 +28,7 @@
                     }
                 }
             }
-            else {scores = JSON.parse(sessionStorage.getItem("contestant-{{contestantnum}}"))}
+            else {scores = JSON.parse(sessionStorage.getItem("{{theme}}-contestant-{{contestantnum}}"))}
             // FIXME: ESC ON NAVBAR
             $(window).on("load",function(){
                 updateScorePlaceholder();
@@ -133,7 +133,7 @@
                         scores[{{genders}}[x]][criteria[y]]=-1;
                     }
                 }
-                sessionStorage.removeItem("contestant-{{contestantnum}}");
+                sessionStorage.clear();
                 updateScorePlaceholder();
             }
             function changeScore(){
@@ -144,7 +144,7 @@
                 scores[indexX][indexY]=parseInt(input);
                 //closeModal();
                 updateScorePlaceholder();
-                sessionStorage.setItem("contestant-{{contestantnum}}",JSON.stringify(scores));
+                sessionStorage.setItem("{{theme}}-contestant-{{contestantnum}}",JSON.stringify(scores));
                 activateUploadModal(checkIfUploadReady());
             }
             function updateScorePlaceholder(){
@@ -182,6 +182,8 @@
         <div class="outer"> 
             <div class="innerL">
                 <img class="cts" src="{{url_for('static',filename='images/'+contestantnum+'/1'+gender+'.png')}}">
+                <span>{{contestantdata[loop.index-1]["name"]}}</span><br>
+                <span>{{contestantdata[loop.index-1]["grSec"]}}</span>
             </div>
             <div class="innerR">
                 <div class="scoreWord">

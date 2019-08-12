@@ -91,7 +91,7 @@ def theme_route_contestant(theme,contestantnum):
                 PREVIOUS_SCORES= json.load(CONTESTANT_SCORES)
             else:
                 PREVIOUS_SCORES = "false"
-            return render_template("contestant-page.j2",previousScores=PREVIOUS_SCORES, tContestantNum = TOTAL_CONTESTANT_NUM,theme=theme,contestant=CONTESTANT_LIST[contestantnum], contestantnum=str(contestantnum))  
+            return render_template("contestant-page.j2",previousScores=PREVIOUS_SCORES, tContestantNum = TOTAL_CONTESTANT_NUM,theme=theme,contestant=CONTESTANT_LIST[contestantnum], contestantnum=str(contestantnum), contestantdata=(CONTESTANT_LIST[contestantnum]["male"],CONTESTANT_LIST[contestantnum]["female"]))  
         else:
             return TEMPLATE_403
     else:

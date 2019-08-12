@@ -132,6 +132,7 @@
             }
         </style>
         <script src="{{url_for('static' ,filename='lib/jquery-3.4.1.js')}}"> </script>
+            {%set themes = ["thematic","casual","evening"]%}
         <script>
             var TOTAL_CONTESTANT_NUM = {{tContestantNum}};
             function toggleModalElement(element){
@@ -141,12 +142,16 @@
                 $("#"+element).fadeOut("fast");
             }
             function checkIfUploadReady(){
-                for(let i=1;i<=TOTAL_CONTESTANT_NUM;i++){
-                    if(!("contestant-"+i in sessionStorage)) return false;
-                    let contestantScore = JSON.parse(sessionStorage.getItem("contestant-"+i))
-                    for(let gender in contestantScore){
-                        for(let criteria in contestantScore[gender]){
-                            if(contestantScore[gender][criteria]==-1) return false;
+                let themes = {{themes}};
+                for(let x in themes){
+                    theme = themes[x];
+                    for(let i=1;i<=TOTAL_CONTESTANT_NUM;i++){
+                        if(!(theme+"-contestant-"+i in sessionStorage)) return false;
+                        let contestantScore = JSON.parse(sessionStorage.getItem(theme+"-contestant-"+i))
+                        for(let gender in contestantScore){
+                            for(let criteria in contestantScore[gender]){
+                                if(contestantScore[gender][criteria]==-1) return false;
+                            }
                         }
                     }
                 }
@@ -161,11 +166,15 @@
                 }
             }
             function uploadSessionScores(){
-                for(let i=1;i<=TOTAL_CONTESTANT_NUM;i++){
-                    let contestantScore = JSON.parse(sessionStorage.getItem("contestant-"+i))
-                    for(let gender in contestantScore){
-                        for(let criteria in contestantScore[gender]){
-                            $("#contestant-"+i+"-div>."+gender+"-scores>"+"."+criteria+">.ss-placeholder").text(contestantScore[gender][criteria]);
+                let themes = {{themes}};
+                for(let x in themes){
+                    theme = themes[x];
+                    for(let i=1;i<=TOTAL_CONTESTANT_NUM;i++){
+                        let contestantScore = JSON.parse(sessionStorage.getItem(theme+"-contestant-"+i))
+                        for(let gender in contestantScore){
+                            for(let criteria in contestantScore[gender]){
+                                $("."+theme+">#contestant-"+i+"-div>."+gender+"-scores>"+"."+criteria+">.ss-placeholder").text(contestantScore[gender][criteria]);
+                            }
                         }
                     }
                 }
@@ -217,23 +226,27 @@
 
         <div id="modal-element-summaryofscores" class="modal-summaryofscores">
             <div class="content">
-                {% for i in range(1,tContestantNum+1)%}
-                <div id="contestant-{{i|string}}-div">
-                    <span> Contestant {{i}}</span>
-                    <div class="M-scores">
-                        <span class="gender"> Male: </span> <br>
-                        <span class="ss-criteria creativeness"> Creativeness: <span class="ss-placeholder">00</span></span> <br>
-                        <span class="ss-criteria stagepresence"> Stage Presence/Stance: <span class="ss-placeholder">00</span></span> <br>
-                        <span class="ss-criteria appropriateness"> Appropriateness: <span class="ss-placeholder">00</span></span> <br>
+                {% for theme in themes %}
+                <div class="theme {{theme}}"> <span>{{theme|upper}}</span>
+                    {% for i in range(1,tContestantNum+1)%}
+                    <div id="contestant-{{i|string}}-div">
+                        <span> Contestant {{i}}</span>
+                        <div class="M-scores">
+                            <span class="gender"> Male: </span> <br>
+                            <span class="ss-criteria creativeness"> Creativeness: <span class="ss-placeholder">00</span></span> <br>
+                            <span class="ss-criteria stagepresence"> Stage Presence/Stance: <span class="ss-placeholder">00</span></span> <br>
+                            <span class="ss-criteria appropriateness"> Appropriateness: <span class="ss-placeholder">00</span></span> <br>
+                        </div>
+                        <div class="F-scores">
+                            <span class="gender"> Female: </span> <br>
+                            <span class="ss-criteria creativeness"> Creativeness: <span class="ss-placeholder">00</span></span> <br>
+                            <span class="ss-criteria stagepresence"> Stage Presence/Stance: <span class="ss-placeholder">00</span></span> <br>
+                            <span class="ss-criteria appropriateness"> Appropriateness: <span class="ss-placeholder">00</span></span> <br>
+                        </div>
                     </div>
-                    <div class="F-scores">
-                        <span class="gender"> Female: </span> <br>
-                        <span class="ss-criteria creativeness"> Creativeness: <span class="ss-placeholder">00</span></span> <br>
-                        <span class="ss-criteria stagepresence"> Stage Presence/Stance: <span class="ss-placeholder">00</span></span> <br>
-                        <span class="ss-criteria appropriateness"> Appropriateness: <span class="ss-placeholder">00</span></span> <br>
-                    </div>
+                    <br>
+                    {% endfor %}
                 </div>
-                <br>
                 {% endfor %}
             </div>
         </div>
