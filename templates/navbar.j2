@@ -5,6 +5,9 @@
                 font-family:"Intro";
                 src: url("{{url_for('static',filename='styles/fonts/Intro.otf')}}") format("opentype");
             }
+            *:focus{
+                outline:none;
+            }
             body{
                 overflow:hidden;
             }
@@ -51,7 +54,7 @@
             .modal-manual{
                 height:100%;
                 width:100%;
-                z-index: 1;
+                z-index: 2;
                 position:fixed;
                 left:0;
                 top:0;
@@ -65,27 +68,125 @@
                 background-color: white;
                 overflow-y:auto;
             }
+            .upload-modal{
+                position:fixed;
+                right:2%;
+                bottom:3%;
+                height:11%;
+                width: 21%;
+                background-color:white;
+                border: 1px solid gray;
+                border-radius: 20px;
+                padding:1%;
+                display:none;
+            }
+            .upload-modal>.content{
+                height:100%;
+                width: 100%;
+                display:flex;
+                justify-content: space-between;
+                align-items:center;
+            }
+            .upload-modal >.content> button{
+                height: 90%;
+                width: 20%;
+                background-color: green;
+                border:none;
+                border-radius: 20px;
+            }
+            .upload-modal >.content> button:hover{
+                background-color: lightgreen;
+            }
+            .upload-modal >.content> button:active{
+                background-color: darkgreen;
+            }
+            .upload-modal >.content> span{
+                color: blue;
+                font-family: Visby;
+                width: 80%;
+                font-size: 150%;
+                text-align:center;
+            }
+            .modal-summaryofscores{
+                height:100%;
+                width:100%;
+                z-index: 1;
+                position:fixed;
+                left:0;
+                top:0;
+                background-color: rgba(0,0,0,0.7);
+                display:none;
+            }
+            .modal-summaryofscores>.content{
+                height:90%;
+                width:90%;
+                margin:2.5% auto;
+                background-color:white;
+                overflow-y:auto;
+            }
+            .ss-criteria{
+                margin-left:10%;
+            }
+            .gender{
+                margin-left:5%;
+            }
         </style>
         <script src="{{url_for('static' ,filename='lib/jquery-3.4.1.js')}}"> </script>
         <script>
-            function toggleModalManual(){
-                $("#modal-element-manual").fadeIn("fast");
+            var TOTAL_CONTESTANT_NUM = {{tContestantNum}};
+            function toggleModalElement(element){
+                $("#"+element).fadeIn("fast");
             }
-            function closeModalManual(){
-                $("#modal-element-manual").fadeOut("fast");
+            function closeModalElement(element){
+                $("#"+element).fadeOut("fast");
+            }
+            function checkIfUploadReady(){
+                for(let i=1;i<=TOTAL_CONTESTANT_NUM;i++){
+                    if(!("contestant-"+i in sessionStorage)) return false;
+                    let contestantScore = JSON.parse(sessionStorage.getItem("contestant-"+i))
+                    for(let gender in contestantScore){
+                        for(let criteria in contestantScore[gender]){
+                            if(contestantScore[gender][criteria]==-1) return false;
+                        }
+                    }
+                }
+                return true;
+            }
+            function activateUploadModal(state){
+                if(state){
+                    $("#upload-modal").fadeIn("slow");
+                }
+                else{
+                    $("#upload-modal").fadeOut("slow");
+                }
+            }
+            function uploadSessionScores(){
+                for(let i=1;i<=TOTAL_CONTESTANT_NUM;i++){
+                    let contestantScore = JSON.parse(sessionStorage.getItem("contestant-"+i))
+                    for(let gender in contestantScore){
+                        for(let criteria in contestantScore[gender]){
+                            $("#contestant-"+i+"-div>."+gender+"-scores>"+"."+criteria+">.ss-placeholder").text(contestantScore[gender][criteria]);
+                        }
+                    }
+                }
+                toggleModalElement("modal-element-summaryofscores");
             }
             $(window).click(function(event) {
                 if (event.target.id == "modal-element-manual") {
-                    closeModalManual();
+                    closeModalElement("modal-element-manual");
+                }
+                if (event.target.id == "modal-element-summaryofscores") {
+                    closeModalElement("modal-element-summaryofscores");
                 }
             });
             $(window).on("load", function(){
                 $(document).on('keydown', function(e) {
                     if(e.which == 112){
                         e.preventDefault();
-                        $("#modal-element-manual").fadeToggle("fast");
+                        toggleModalElement("modal-element-manual");
                     }
                 });
+                activateUploadModal(checkIfUploadReady());
             });
         </script>
     </head>
@@ -97,14 +198,44 @@
                 <a class="selector" href="/thematic">THEMATIC</a>
                 <a class="selector" href="/casual">CASUAL</a>
                 <a class="selector" href="/evening">EVENING</a>
-                <button id="manual-button" class="manual" onClick="toggleModalManual()">?</button>
+                <button id="manual-button" class="manual" onClick="toggleModalElement('modal-element-manual')">?</button>
             </div>
         </div>
         
         <div id="modal-element-manual" tabIndex=1 class="modal-manual">
-        <div class="manual-content">
-            {% include "manual.html" %}
+            <div class="manual-content">
+                {% include "manual.html" %}
+            </div>
         </div>
+
+        <div id="upload-modal" class="upload-modal">
+            <div class="content"> 
+                <span>Ready to Upload!</span>
+                <button id="upload-button" onClick="uploadSessionScores()">>></button>
+            </div>
+        </div>
+
+        <div id="modal-element-summaryofscores" class="modal-summaryofscores">
+            <div class="content">
+                {% for i in range(1,tContestantNum+1)%}
+                <div id="contestant-{{i|string}}-div">
+                    <span> Contestant {{i}}</span>
+                    <div class="M-scores">
+                        <span class="gender"> Male: </span> <br>
+                        <span class="ss-criteria creativeness"> Creativeness: <span class="ss-placeholder">00</span></span> <br>
+                        <span class="ss-criteria stagepresence"> Stage Presence/Stance: <span class="ss-placeholder">00</span></span> <br>
+                        <span class="ss-criteria appropriateness"> Appropriateness: <span class="ss-placeholder">00</span></span> <br>
+                    </div>
+                    <div class="F-scores">
+                        <span class="gender"> Female: </span> <br>
+                        <span class="ss-criteria creativeness"> Creativeness: <span class="ss-placeholder">00</span></span> <br>
+                        <span class="ss-criteria stagepresence"> Stage Presence/Stance: <span class="ss-placeholder">00</span></span> <br>
+                        <span class="ss-criteria appropriateness"> Appropriateness: <span class="ss-placeholder">00</span></span> <br>
+                    </div>
+                </div>
+                <br>
+                {% endfor %}
+            </div>
         </div>
     </body>
 

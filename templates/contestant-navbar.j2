@@ -30,7 +30,7 @@
         {% include "navbar.j2" %}
         <div class="contestant-navbar">
                 <div class="contestant-selector">
-                    {% for contestant in range(0,contestantNum) %}
+                    {% for contestant in range(0,tContestantNum) %}
                     <a href="/{{theme}}/{{loop.index}}">{{loop.index}}</a>
                     {% endfor %}
                 </div>

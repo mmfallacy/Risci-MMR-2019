@@ -37,7 +37,7 @@ PALETTE=["red","blue","green","#8EE4AF"]
 @app.route("/")
 def index():
     if isRegistered():
-        return render_template("index.j2", bgColor=PALETTE[3],mmrdate=MMR_DATE, contestantNum = TOTAL_CONTESTANT_NUM)  
+        return render_template("index.j2", bgColor=PALETTE[3],mmrdate=MMR_DATE, tContestantNum = TOTAL_CONTESTANT_NUM)  
     else:
         return render_template("login.j2", error=" ")
 
@@ -73,7 +73,7 @@ def login_validate():
 @app.route("/<theme>")
 def theme_route(theme):
     if theme in THEME_LIST and isRegistered():
-        return render_template("theme-page.j2", bgColor=PALETTE[THEME_LIST.index(theme)],mmrdate=MMR_DATE,contestantNum = TOTAL_CONTESTANT_NUM,theme=theme)
+        return render_template("theme-page.j2", bgColor=PALETTE[THEME_LIST.index(theme)],mmrdate=MMR_DATE,tContestantNum = TOTAL_CONTESTANT_NUM,theme=theme)
     else:
         return TEMPLATE_403
 
@@ -91,7 +91,7 @@ def theme_route_contestant(theme,contestantnum):
                 PREVIOUS_SCORES= json.load(CONTESTANT_SCORES)
             else:
                 PREVIOUS_SCORES = "false"
-            return render_template("contestant-page.j2",previousScores=PREVIOUS_SCORES, contestantNum = TOTAL_CONTESTANT_NUM,theme=theme,contestant=CONTESTANT_LIST[contestantnum], contestantnum=str(contestantnum))  
+            return render_template("contestant-page.j2",previousScores=PREVIOUS_SCORES, tContestantNum = TOTAL_CONTESTANT_NUM,theme=theme,contestant=CONTESTANT_LIST[contestantnum], contestantnum=str(contestantnum))  
         else:
             return TEMPLATE_403
     else:
