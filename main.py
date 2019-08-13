@@ -2,7 +2,7 @@ import os,sys,json, datetime
 from flask import Flask,render_template,request,session,send_from_directory
 
 ################################################
-SESSION_SECRET_KEY = '72334c6965fa102866da48ae'
+SESSION_SECRET_KEY = '72334c6965fa103866da48ae'
 ################################################
 
 app = Flask(__name__)
@@ -13,7 +13,10 @@ CURRENTDIR = os.path.dirname(sys.executable) if getattr(sys, 'frozen', False) el
 def isRegistered():
     return 'u-name' in session
 def submitStatus():
-    return SUBMIT_STATUS[session["u-name"]]
+    if isRegistered():
+        return SUBMIT_STATUS[session["u-name"]]
+    else:
+        return False
 
 with open(os.path.join(CURRENTDIR,"config","contestants.json"),"r") as CONTESTANT_CONFIG_FILE:
     CONTESTANT_LIST = json.load(CONTESTANT_CONFIG_FILE)
