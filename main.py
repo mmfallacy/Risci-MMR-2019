@@ -12,7 +12,8 @@ CURRENTDIR = os.path.dirname(sys.executable) if getattr(sys, 'frozen', False) el
 
 def isRegistered():
     return 'u-name' in session
-
+def submitStatus():
+    return SUBMIT_STATUS[session["u-name"]]
 
 with open(os.path.join(CURRENTDIR,"config","contestants.json"),"r") as CONTESTANT_CONFIG_FILE:
     CONTESTANT_LIST = json.load(CONTESTANT_CONFIG_FILE)
@@ -30,14 +31,20 @@ TEMPLATE_403 = "403"
 
 CURRENT_CONTESTANT_NUMBER =1
 CURRENT_USERNAME_LIST = [i for i in os.listdir(os.path.join(CURRENTDIR,"data"))]
+SUBMIT_STATUS = {}
+for i in CURRENT_USERNAME_LIST:
+    SUBMIT_STATUS[i]=False
+
 THEME_LIST = ["thematic","casual","evening"]
 PALETTE=["red","blue","green","#8EE4AF"]
 
 # INDEX.HTML
 @app.route("/")
 def index():
-    if isRegistered():
+    if isRegistered() and not submitStatus():
         return render_template("index.j2", bgColor=PALETTE[3],mmrdate=MMR_DATE, tContestantNum = TOTAL_CONTESTANT_NUM)  
+    elif submitStatus():
+        return "SUBMITTED"
     else:
         return render_template("login.j2", error=" ")
 
@@ -56,6 +63,7 @@ def login_validate():
             return render_template("login.j2", error="Username taken!")
         else:
             CURRENT_USERNAME_LIST.append(_username)
+            SUBMIT_STATUS[_username] = False
             session.permanent=True
             session['u-name'] = _username
             os.mkdir(os.path.join(CURRENTDIR,"data",_username))
@@ -63,7 +71,7 @@ def login_validate():
                 os.mkdir(os.path.join(CURRENTDIR,"data",_username,theme))
             return render_template("login-validate.j2",username=_username)
     else:
-        if isRegistered():
+        if isRegistered() and not submitStatus():
             return render_template("login-validate.j2",username=session['u-name'])
         else:
             return TEMPLATE_403
@@ -72,7 +80,7 @@ def login_validate():
 # THEME PAGES
 @app.route("/<theme>")
 def theme_route(theme):
-    if theme in THEME_LIST and isRegistered():
+    if theme in THEME_LIST and isRegistered() and not submitStatus():
         return render_template("theme-page.j2", bgColor=PALETTE[THEME_LIST.index(theme)],mmrdate=MMR_DATE,tContestantNum = TOTAL_CONTESTANT_NUM,theme=theme)
     else:
         return TEMPLATE_403
@@ -82,7 +90,7 @@ def theme_route(theme):
 @app.route("/<theme>/<int:contestantnum>/")
 def theme_route_contestant(theme,contestantnum):
     if theme in THEME_LIST and contestantnum <= TOTAL_CONTESTANT_NUM and contestantnum > 0:
-        if isRegistered():
+        if isRegistered()and not submitStatus():
             global CURRENT_CONTESTANT_NUMBER
             CURRENT_CONTESTANT_NUMBER = contestantnum
             _path = os.path.join(CURRENTDIR,"data",session["u-name"],theme,str(contestantnum)+".json")
@@ -97,18 +105,20 @@ def theme_route_contestant(theme,contestantnum):
     else:
         return TEMPLATE_404
 
-# AJAX HANDLER FOR SCORE UPDATES
-@app.route("/<theme>/updateScores",methods=["GET","POST"])
-def saveJSON(theme):
+# AJAX HANDLER FOR SCORE UPLOAD
+@app.route("/upload",methods=["POST"])
+def handleUpload():
     if isRegistered() and request.method=="POST":
-        _formdata = request.form
+        _formdata = request.form 
         _username = session["u-name"]
-        with open(os.path.join(CURRENTDIR,"data",_username,theme,str(CURRENT_CONTESTANT_NUMBER)+".json"),'w+') as f:
-            json.dump(_formdata, f, sort_keys=True, ensure_ascii=False, indent=4) 
+
+        _formdata = json.loads(_formdata["SS"])
+        with open(os.path.join(CURRENTDIR,"data",_username,"scoresheet.json"),'w+') as f:
+            json.dump(_formdata, f, sort_keys=True, ensure_ascii=False, indent=4)
+        SUBMIT_STATUS[_username]=True
         return "DONE"   
     else:
         return TEMPLATE_403
-
 
 @app.errorhandler(404)
 def page_not_found(e):

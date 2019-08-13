@@ -135,6 +135,7 @@
             {%set themes = ["thematic","casual","evening"]%}
         <script>
             var TOTAL_CONTESTANT_NUM = {{tContestantNum}};
+            var SCORE_SUMMARY = {};
             function toggleModalElement(element){
                 $("#"+element).fadeIn("fast");
             }
@@ -165,20 +166,32 @@
                     $("#upload-modal").fadeOut("slow");
                 }
             }
-            function uploadSessionScores(){
+            function createScoreSummary(){
                 let themes = {{themes}};
                 for(let x in themes){
                     theme = themes[x];
+                    SCORE_SUMMARY[theme]=[];
                     for(let i=1;i<=TOTAL_CONTESTANT_NUM;i++){
+                        SCORE_SUMMARY[theme][i-1]={}
                         let contestantScore = JSON.parse(sessionStorage.getItem(theme+"-contestant-"+i))
                         for(let gender in contestantScore){
+                            SCORE_SUMMARY[theme][i-1][gender] = {};
                             for(let criteria in contestantScore[gender]){
+                                SCORE_SUMMARY[theme][i-1][gender][criteria] = contestantScore[gender][criteria];
                                 $("."+theme+">#contestant-"+i+"-div>."+gender+"-scores>"+"."+criteria+">.ss-placeholder").text(contestantScore[gender][criteria]);
                             }
                         }
                     }
                 }
                 toggleModalElement("modal-element-summaryofscores");
+            }
+            function uploadScoreSummary(){
+                $.ajax({
+                    url:"http://{{request.host}}/upload",
+                    type:"POST",
+                    data: {"SS":JSON.stringify(SCORE_SUMMARY)},
+                    success: function(){location.href = "http://{{request.host}}/";}
+                });
             }
             $(window).click(function(event) {
                 if (event.target.id == "modal-element-manual") {
@@ -220,7 +233,7 @@
         <div id="upload-modal" class="upload-modal">
             <div class="content"> 
                 <span>Ready to Upload!</span>
-                <button id="upload-button" onClick="uploadSessionScores()">>></button>
+                <button id="upload-button" onClick="createScoreSummary()">>></button>
             </div>
         </div>
 
@@ -248,6 +261,7 @@
                     {% endfor %}
                 </div>
                 {% endfor %}
+                <button onClick="uploadScoreSummary();">UPLOAD!</button>
             </div>
         </div>
     </body>
