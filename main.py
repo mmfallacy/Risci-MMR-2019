@@ -69,9 +69,6 @@ def login_validate():
             SUBMIT_STATUS[_username] = False
             session.permanent=True
             session['u-name'] = _username
-            os.mkdir(os.path.join(CURRENTDIR,"data",_username))
-            for theme in ['thematic','casual','evening']:
-                os.mkdir(os.path.join(CURRENTDIR,"data",_username,theme))
             return render_template("login-validate.j2",username=_username)
     else:
         if isRegistered() and not submitStatus():
@@ -94,15 +91,7 @@ def theme_route(theme):
 def theme_route_contestant(theme,contestantnum):
     if theme in THEME_LIST and contestantnum <= TOTAL_CONTESTANT_NUM and contestantnum > 0:
         if isRegistered()and not submitStatus():
-            global CURRENT_CONTESTANT_NUMBER
-            CURRENT_CONTESTANT_NUMBER = contestantnum
-            _path = os.path.join(CURRENTDIR,"data",session["u-name"],theme,str(contestantnum)+".json")
-            if(os.path.isfile(_path)):
-                CONTESTANT_SCORES = open(_path,"r")
-                PREVIOUS_SCORES= json.load(CONTESTANT_SCORES)
-            else:
-                PREVIOUS_SCORES = "false"
-            return render_template("contestant-page.j2",previousScores=PREVIOUS_SCORES, tContestantNum = TOTAL_CONTESTANT_NUM,theme=theme,contestant=CONTESTANT_LIST[contestantnum], contestantnum=str(contestantnum), contestantdata=(CONTESTANT_LIST[contestantnum]["male"],CONTESTANT_LIST[contestantnum]["female"]))  
+            return render_template("contestant-page.j2", tContestantNum = TOTAL_CONTESTANT_NUM,theme=theme,contestant=CONTESTANT_LIST[contestantnum], contestantnum=str(contestantnum), contestantdata=(CONTESTANT_LIST[contestantnum]["male"],CONTESTANT_LIST[contestantnum]["female"]))  
         else:
             return TEMPLATE_403
     else:
@@ -114,9 +103,8 @@ def handleUpload():
     if isRegistered() and request.method=="POST":
         _formdata = request.form 
         _username = session["u-name"]
-
         _formdata = json.loads(_formdata["SS"])
-        with open(os.path.join(CURRENTDIR,"data",_username,"scoresheet.json"),'w+') as f:
+        with open(os.path.join(CURRENTDIR,"data",_username+".json"),'w+') as f:
             json.dump(_formdata, f, sort_keys=True, ensure_ascii=False, indent=4)
         SUBMIT_STATUS[_username]=True
         return "DONE"   
