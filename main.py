@@ -33,10 +33,25 @@ TEMPLATE_404 = "404"
 TEMPLATE_403 = "403"
 
 CURRENT_CONTESTANT_NUMBER =1
-CURRENT_USERNAME_LIST = [i for i in os.listdir(os.path.join(CURRENTDIR,"data"))]
+
+if not os.path.exists(os.path.join(CURRENTDIR,"data","CURRENT-USERS.json")):
+    with open(os.path.join(CURRENTDIR,"data","CURRENT-USERS.json"),'w+') as f:
+        json.dump([], f, ensure_ascii=False, indent=4)
+
+
+CURRENT_USER_JSON = open(os.path.join(CURRENTDIR,"data","CURRENT-USERS.json"),'r')
+try:
+    CURRENT_USERNAME_LIST = [i for i in json.loads(CURRENT_USER_JSON.read())]
+except json.decoder.JSONDecodeError:
+    CURRENT_USERNAME_LIST = []
+CURRENT_USER_JSON.close()
+del CURRENT_USER_JSON
+
 SUBMIT_STATUS = {}
+
 for i in CURRENT_USERNAME_LIST:
-    SUBMIT_STATUS[i]=False
+    SUBMIT_STATUS[i]=os.path.exists(os.path.join(CURRENTDIR,"data",i+".json"))
+
 
 THEME_LIST = ["thematic","casual","evening"]
 PALETTE=["red","blue","green","#8EE4AF"]
@@ -47,7 +62,8 @@ def index():
     if isRegistered() and not submitStatus():
         return render_template("index.j2", bgColor=PALETTE[3],mmrdate=MMR_DATE, tContestantNum = TOTAL_CONTESTANT_NUM)  
     elif submitStatus():
-        return "SUBMITTED"
+        with open(os.path.join(CURRENTDIR,"data",session["u-name"]+".json"),'r') as f:
+            return "<h1>SUBMITTED:"+session["u-name"]+"</h1> <br><br>"+ json.dumps(f.read(),  ensure_ascii=False, indent=4).replace("\\n","<br>").replace('\\"','"')[1:-1]
     else:
         return render_template("login.j2", error=" ")
 
@@ -60,7 +76,7 @@ def favicon():
 # LOGIN VALIDATION
 @app.route("/login-validate",methods=['GET','POST'])
 def login_validate():
-    if request.method == "POST":
+    if request.method == "POST" and not isRegistered():
         _username = request.form['login-username']
         if _username in CURRENT_USERNAME_LIST:
             return render_template("login.j2", error="Username taken!")
@@ -69,7 +85,12 @@ def login_validate():
             SUBMIT_STATUS[_username] = False
             session.permanent=True
             session['u-name'] = _username
+            with open(os.path.join(CURRENTDIR,"data","CURRENT-USERS.json"),'w+') as f:
+                 json.dump(CURRENT_USERNAME_LIST, f, ensure_ascii=False, indent=4)
+
             return render_template("login-validate.j2",username=_username)
+    elif request.method == "POST" and isRegistered():
+        return "already logged in! <button onClick='location.href=\"http://"+request.host+"/\"'>Redirect</button>"
     else:
         if isRegistered() and not submitStatus():
             return render_template("login-validate.j2",username=session['u-name'])
@@ -105,7 +126,7 @@ def handleUpload():
         _username = session["u-name"]
         _formdata = json.loads(_formdata["SS"])
         with open(os.path.join(CURRENTDIR,"data",_username+".json"),'w+') as f:
-            json.dump(_formdata, f, sort_keys=True, ensure_ascii=False, indent=4)
+            json.dump(_formdata, f, ensure_ascii=False, indent=4)
         SUBMIT_STATUS[_username]=True
         return "DONE"   
     else:
@@ -143,3 +164,23 @@ if DEBUG_MODE:
         return "cleared data"
 if __name__=="__main__":
     app.run("0.0.0.0",SERVER_PORT, debug=DEBUG_MODE)
+
+#####
+"""
+    TODO : Already Registered HTML
+    TODO : Login Validation HTML
+    TODO : TEMPLATE 404 HTML
+    TODO : TEMPLATE 403 HTML
+    TODO : MAGIC 5 RESULT HTML
+    TODO : Q&A HTML
+    TODO : NAVIGATION BARS HTML
+    TODO : CHANGE SCORE MODAL DESIGN
+    TODO : SUMMARY SCORE MODAL DESIGN
+    TODO : UPLOAD BUTTON DESIGN
+    TODO : INDEX HTML REDESIGN
+    TODO : CONTESTANT PAGE MINOR REDESIGN
+    TODO : THEME PAGE HTML
+    TODO : RESULT HTML FOR DISPLAY
+    TODO : MANUAL HTML
+"""
+###
