@@ -66,7 +66,7 @@ for i in CURRENT_USERNAME_LIST:
 
 THREAD = Thread()
 EVENT = Event()
-RESULT_STATUS = True
+RESULT_STATUS = False
 
 # CREATE SCORES.XLSX
 class Tabulate(Thread):
