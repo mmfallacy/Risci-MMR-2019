@@ -2,15 +2,21 @@
     <head>
         <title>Mr & Ms Risci Pageant Scoresheet: Contestant {{contestantnum}} </title>
         <script src="{{url_for('static' ,filename='lib/jquery-3.4.1.js')}}"> </script>
-        
-            {% set genders = ["M","F"]%}
-            {% set criteriaList = ["Creativeness","Stage Presence/Stance","Appropriateness"]%}
-            {% set criteriaShortHand = ["creativeness","stagepresence","appropriateness"]%}
+            {% set genders = ["M","F"] %}
         <script>
             var buttonList = [];
             var currentInput;
             var criteriaFull = {{criteriaList}};
-            var criteria = {{criteriaShortHand}};
+            var criteria = [];
+            var criteriaMax = {};
+            for(let criterion in criteriaFull){
+                _max = criteriaFull[criterion];
+                criterion = criterion.split("/",1)[0]
+                criterion = criterion.replace(/\s+/g,"")
+                criteria.push(criterion.toLowerCase());
+                criteriaMax[criterion.toLowerCase()] = _max;
+            }
+            console.log(criteriaMax);
             var scores = {};
             var indexButton = 0;
             for(let x in {{genders}}){
@@ -42,7 +48,10 @@
                         return false;  
                     }
                 
-                });
+                }); 
+                for(let i in criteriaMax){
+                    $(".score-max#MAX"+(criteria.indexOf(i)+1)).text("/"+criteriaMax[i]);
+                }
                 $("#score-input").on("input propertychange paste",function(){
                     validateScore();
                 })
@@ -96,6 +105,7 @@
             });
             function validateScore(){
                 let input = $("#score-input").val();
+                let index = criteria[parseInt(currentInput.slice(1,2))-1];
                 if (/^0+/gi.test(input)) {
                     $("#score-input").val('');
                     return false;
@@ -105,9 +115,9 @@
                     $("#score-input").val('');
                     return false;
                 }
-                else if(parseInt(input)>30){
-                    $("#score-error").text("Max score input is 30!");
-                    $("#score-input").val(30);
+                else if(parseInt(input)>criteriaMax[index]){
+                    $("#score-error").text("Max score input is "+criteriaMax[index]+    "!");
+                    $("#score-input").val(criteriaMax[index]);
                     return false;
                 }
                 else if(parseInt(input)<0){
@@ -140,7 +150,8 @@
                 let indexX = currentInput.slice(0,-1);
                 let indexY = criteria[parseInt(currentInput.slice(1,2))-1];
                 let input = validateScore();
-                if(!input) {$("#score-error").text(" ");return;}
+                $("#score-error").text(" ")
+                if(!input) {return;}
                 scores[indexX][indexY]=parseInt(input);
                 //closeModal();
                 updateScorePlaceholder();
@@ -178,7 +189,7 @@
     {% include "contestant-navbar.j2" %}
     <div id="contestant-page">
         <h1 class="contestant-number"> Contestant # {{contestantnum}}</h1>
-        {%for gender in genders%}
+        {% for gender in genders %}
         <div class="outer"> 
             <div class="innerL">
                 <img class="cts" src="{{url_for('static',filename='images/'+contestantnum+'/1'+gender+'.png')}}">
@@ -190,7 +201,7 @@
                     SCORE
                 </div>
                 <br>
-            {% for criteria in criteriaList%}
+            {% for criteria in criteriaList %}
                 <div class="criteria_score">
                     <span style="font-family: 'Visby';text-align:right;margin-top:3.5%;font-size: 150%;font-weight:bold;color:red;width:10%;overflow:hidden" id="{{gender + loop.index|string+'I'}}">(*)</span>
                     <div class="criteria" id="{{gender + loop.index|string +'C'}}">
@@ -198,7 +209,7 @@
                     </div>
                     <div class="score">
                         <span class="score-placeholder" id="{{gender + loop.index|string}}"></span>
-                        <span class="score-max">/30</span>
+                        <span class="score-max" id="{{'MAX'+loop.index|string}}"></span>
                         <button id="{{gender + loop.index|string +'B'}}" onClick="toggleModal(this.id)">
                             Change 
                         </button>
