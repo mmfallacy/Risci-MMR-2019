@@ -6,7 +6,7 @@ from time import sleep
 from jinja2 import Template, FileSystemLoader, Environment
 
 ################################################
-SESSION_SECRET_KEY = '72444c4975fa103866da48ae'
+SESSION_SECRET_KEY = '99244c4975fa103866da48ae'
 ################################################
 
 app = Flask(__name__)
@@ -124,11 +124,14 @@ class Tabulate(Thread):
             for cnum in range(0,TOTAL_CONTESTANT_NUM):
                 for gender in ["M","F","A"]:
                     for criterion in CRITERIA_SHORT_LIST:
-                        _averageAttire[theme][cnum][gender][criterion] =  _totalAttire[theme][cnum][gender][criterion] / TOTAL_JUDGE_NUM
+                        if gender == "A":
+                            _averageAttire[theme][cnum][gender][criterion] =  _totalAttire[theme][cnum][gender][criterion] / (2*TOTAL_JUDGE_NUM)                         
+                        else:
+                            _averageAttire[theme][cnum][gender][criterion] =  _totalAttire[theme][cnum][gender][criterion] / TOTAL_JUDGE_NUM
                         
         self.params["averageAttire"]=_averageAttire
-        #with open("total.json","w+") as f:
-        #    json.dump([_totalAttire,_averageAttire],f,ensure_ascii=False, indent=4)
+        with open("total.json","w+") as f:
+            json.dump([_totalAttire,_averageAttire],f,ensure_ascii=False, indent=4)
         ## LOAD TEMPLATE
         __loader = FileSystemLoader(searchpath="./templates")
         __env = Environment(loader=__loader)
