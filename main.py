@@ -104,21 +104,21 @@ class Tabulate(Thread):
                     _totalAttire[theme][cnum][gender]={}
                     _averageAttire[theme][cnum][gender]={}
                     for criterion in CRITERIA_SHORT_LIST:
-                        _totalAttire[theme][cnum][gender][criterion] = 0;
-                        _averageAttire[theme][cnum][gender][criterion] = 0;
+                        _totalAttire[theme][cnum][gender][criterion] = 0
+                        _averageAttire[theme][cnum][gender][criterion] = 0
 
         for criterion in CRITERIA_SHORT_LIST:
             for gender in ["M","F"]:
                 for theme in THEME_LIST:
                     for cnum in range(0,TOTAL_CONTESTANT_NUM):
                         for i,val in enumerate(CURRENT_USERNAME_LIST):
-                            _totalAttire[theme][cnum][gender][criterion] += _scores[i][theme][cnum][gender][criterion];
+                            _totalAttire[theme][cnum][gender][criterion] += _scores[i][theme][cnum][gender][criterion]
         for criterion in CRITERIA_SHORT_LIST:
             for gender in ["M","F"]:
                 for theme in THEME_LIST:
                     for cnum in range(0,TOTAL_CONTESTANT_NUM):
                         for i,val in enumerate(CURRENT_USERNAME_LIST):
-                            _totalAttire[theme][cnum]["A"][criterion] += _scores[i][theme][cnum][gender][criterion];
+                            _totalAttire[theme][cnum]["A"][criterion] += _scores[i][theme][cnum][gender][criterion]
 
         for theme in THEME_LIST:
             for cnum in range(0,TOTAL_CONTESTANT_NUM):
@@ -155,6 +155,10 @@ class Tabulate(Thread):
 # INDEX.HTML
 @app.route("/")
 def index():
+    global THREAD
+    if len(CURRENT_USERNAME_LIST) >= TOTAL_JUDGE_NUM and not THREAD.isAlive():
+        THREAD = Tabulate()
+        THREAD.start()
     if isRegistered() and not submitStatus():
         return render_template("index.j2", bgColor=PALETTE[3],mmrdate=MMR_DATE, tContestantNum = TOTAL_CONTESTANT_NUM)  
     elif RESULT_STATUS:
@@ -265,9 +269,6 @@ if DEBUG_MODE:
         THREAD.start()
         return redirect(url_for("/"))
 if __name__=="__main__": 
-    if len(CURRENT_USERNAME_LIST) >= TOTAL_JUDGE_NUM and not THREAD.isAlive():
-        THREAD = Tabulate()
-        THREAD.start()
     app.run("0.0.0.0",SERVER_PORT, debug=DEBUG_MODE)
 
 #####
